@@ -152,16 +152,17 @@ final class MakeEntity extends AbstractMaker implements InputAwareMakerInterface
 
         if ($classExists) {
             $entityPath = $this->getPathOfClass($entityClassDetails->getFullName());
-            $io->text([
-                'Your entity already exists! So let\'s add some new fields!',
-            ]);
-        } else {
-            $io->text([
-                '',
-                'Entity generated! Now let\'s add some fields!',
-                'You can always add more fields later manually or by re-running this command.',
-            ]);
+//            $io->text([
+//                'Your entity already exists! So let\'s add some new fields!',
+//            ]);
         }
+//        else {
+//            $io->text([
+//                '',
+//                'Entity generated! Now let\'s add some fields!',
+//                'You can always add more fields later manually or by re-running this command.',
+//            ]);
+//        }
 
         $currentFields = $this->getPropertyNames($entityClassDetails->getFullName());
         $manipulator = $this->createClassManipulator($entityPath, $io, $overwrite);
@@ -298,6 +299,13 @@ final class MakeEntity extends AbstractMaker implements InputAwareMakerInterface
             return Validator::validateDoctrineFieldName($name, $this->doctrineHelper->getRegistry());
         });
 
+        //the name will be added from a table
+
+//        $fieldName = "nameField";
+//        if (\in_array($fieldName, $fields)) {
+//            throw new \InvalidArgumentException(sprintf('The "%s" property already exists.', $fieldName));
+//        }
+
         if (!$fieldName) {
             return null;
         }
@@ -366,6 +374,116 @@ final class MakeEntity extends AbstractMaker implements InputAwareMakerInterface
         if ($io->confirm('Can this field be null in the database (nullable)', false)) {
             $data['nullable'] = true;
         }
+
+        return $data;
+    }
+
+
+    private function askForNextFiel(array $fields, string $entityClass)
+    {
+
+//        if ($isFirstField) {
+//            $questionText = 'New property name (press <return> to stop adding fields)';
+//        } else {
+//            $questionText = 'Add another property? Enter the property name (or press <return> to stop adding fields)';
+//        }
+
+        $data = ['fieldName' => 'nom', 'type' => 'string'];
+
+        $fieldName = $data['fieldName'];
+        try {
+            return Validator::validateDoctrineFieldName($this->doctrineHelper->getRegistry(), $fieldName);
+        } catch (\Exception $e) {
+        }
+//        $fieldName = $io->ask($questionText, null, function ($name) use ($fields) {
+//            // allow it to be empty
+//            if (!$name) {
+//                return $name;
+//            }
+//
+//            if (\in_array($name, $fields)) {
+//                throw new \InvalidArgumentException(sprintf('The "%s" property already exists.', $name));
+//            }
+//
+//            return Validator::validateDoctrineFieldName($name, $this->doctrineHelper->getRegistry());
+//        });
+
+        //the name will be added from a table
+
+//        $fieldName = "nameField";
+//        if (\in_array($fieldName, $fields)) {
+//            throw new \InvalidArgumentException(sprintf('The "%s" property already exists.', $fieldName));
+//        }
+
+        if (!$fieldName) {
+            return null;
+        }
+
+        $defaultType = 'string';
+        // try to guess the type by the field name prefix/suffix
+        // convert to snake case for simplicity
+        $snakeCasedField = Str::asSnakeCase($fieldName);
+
+        if ('_at' === $suffix = substr($snakeCasedField, -3)) {
+            $defaultType = 'datetime';
+        } elseif ('_id' === $suffix) {
+            $defaultType = 'integer';
+        } elseif (0 === strpos($snakeCasedField, 'is_')) {
+            $defaultType = 'boolean';
+        } elseif (0 === strpos($snakeCasedField, 'has_')) {
+            $defaultType = 'boolean';
+        }
+
+        $type = null;
+        $types = Type::getTypesMap();
+        // remove deprecated json_array
+        unset($types[Type::JSON_ARRAY]);
+
+        $allValidTypes = array_merge(
+            array_keys($types),
+            EntityRelation::getValidRelationTypes(),
+            ['relation']
+        );
+//        while (null === $type) {
+//            $question = new Question('Field type (enter <comment>?</comment> to see all types)', $defaultType);
+//            $question->setAutocompleterValues($allValidTypes);
+//            $type = $io->askQuestion($question);
+
+//            if ('?' === $type) {
+//                $this->printAvailableTypes($io);
+//                $io->writeln('');
+//
+//                $type = null;
+//            } elseif (!\in_array($type, $allValidTypes)) {
+//                $this->printAvailableTypes($io);
+//                $io->error(sprintf('Invalid type "%s".', $type));
+//                $io->writeln('');
+//
+//                $type = null;
+//            }
+//        }
+
+
+//        if ('relation' === $type || \in_array($type, EntityRelation::getValidRelationTypes())) {
+//            return $this->askRelationDetails($io, $entityClass, $type, $fieldName);
+//        }
+
+        // this is a normal field
+//        $data = ['fieldName' => $fieldName, 'type' => $type];
+//        if ('string' === $type) {
+//            // default to 255, avoid the question
+//            $data['length'] = $io->ask('Field length', 255, [Validator::class, 'validateLength']);
+//        } elseif ('decimal' === $type) {
+//            // 10 is the default value given in \Doctrine\DBAL\Schema\Column::$_precision
+//            $data['precision'] = $io->ask('Precision (total number of digits stored: 100.00 would be 5)', 10, [Validator::class, 'validatePrecision']);
+//
+//            // 0 is the default value given in \Doctrine\DBAL\Schema\Column::$_scale
+//            $data['scale'] = $io->ask('Scale (number of decimals to store: 100.00 would be 2)', 0, [Validator::class, 'validateScale']);
+//        }
+//
+//        if ($io->confirm('Can this field be null in the database (nullable)', false)) {
+//            $data['nullable'] = true;
+//        }
 
         return $data;
     }
